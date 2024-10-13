@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Peminjaman Buku</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .data-list {
+            margin-top: 30px;
+        }
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Form Peminjaman Buku</h1>
+    <form onsubmit="submitForm(event)">
+        <label for="nama">Nama Peminjam:</label>
+        <input type="text" id="nama" name="nama_peminjam" placeholder="Masukkan nama Anda" required>
+
+        <label for="nim">NIM Mahasiswa:</label>
+        <input type="text" id="nim" name="nim_mahasiswa" placeholder="Masukkan NIM Anda" required>
+
+        <label for="judul">Judul Buku:</label>
+        <input type="text" id="judul" name="judul_buku" placeholder="Masukkan judul buku" required>
+
+        <input type="submit" value="Pinjam Buku">
+    </form>
+
+    <div class="data-list" id="data-list">
+        <h2>Daftar Peminjaman</h2>
+        <!-- Data peminjaman akan ditampilkan di sini -->
+    </div>
+</div>
+
+<script>
+    async function submitForm(event) {
+        event.preventDefault();
+
+        const nama = document.getElementById('nama').value;
+        const nim = document.getElementById('nim').value;
+        const judul = document.getElementById('judul').value;
+
+        const response = await fetch('/api/peminjaman', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nama_peminjam: nama, nim_mahasiswa: nim, judul_buku: judul })
+        });
+
+        if (response.ok) {
+            // Setelah berhasil, tampilkan ulang daftar data
+            displayData();
+        }
+
+        // Kosongkan input setelah submit
+        document.getElementById('nama').value = '';
+        document.getElementById('nim').value = '';
+        document.getElementById('judul').value = '';
+    }
+
+    async function displayData() {
+        const response = await fetch('/api/peminjaman');
+        const data = await response.json();
+
+        const dataList = document.getElementById('data-list');
+        dataList.innerHTML = '';
+
+        data.forEach((item) => {
+            const div = document.createElement('div');
+            div.classList.add('data-item');
+            div.innerHTML = `
+                <div>
+                    <strong>${item.nama_peminjam}</strong> (NIM: ${item.nim_mahasiswa}) - Judul Buku: ${item.judul_buku}
+                </div>
+                <button class="delete-button" onclick="deleteData(${item.id})">Hapus</button>
+            `;
+            dataList.appendChild(div);
+        });
+    }
+
+    async function deleteData(id) {
+        const response = await fetch(`/api/peminjaman/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            // Tampilkan ulang daftar data setelah penghapusan
+            displayData();
+        }
+    }
+
+    window.onload = displayData;
+</script>
+
+</body>
+</html>
